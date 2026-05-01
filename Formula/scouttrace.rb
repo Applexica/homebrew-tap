@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.1.tar.gz"
-  sha256 "715bf8f74e0f7b1584ae7c1c029d7538fc0505d8b13f3fab7790b08157f4c4fc"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.2.tar.gz"
+  sha256 "24fba34d9b12ca4f0137fba89d8605a35db3e1c56556435b07dfab43928347c7"
   license "Apache-2.0"
 
   depends_on "go" => :build
@@ -23,5 +23,14 @@ class Scouttrace < Formula
       "#{bin}/scouttrace init --hosts none --destination stdout --yes --dry-run",
     )
     assert_match "default_destination", output
+
+    interactive_home = testpath/"interactive-home"
+    interactive_home.mkpath
+    interactive = pipe_output(
+      "#{bin}/scouttrace --home #{interactive_home} init",
+      "stdout\nnone\nstrict\ny\n",
+    )
+    assert_match "ScoutTrace setup wizard", interactive
+    assert_match "Wrote", interactive
   end
 end
