@@ -18,7 +18,10 @@ class Scouttrace < Formula
 
     test_home = testpath/"home"
     test_home.mkpath
-    output = shell_output("SCOUTTRACE_HOME=#{test_home} #{bin}/scouttrace init --hosts none --destination stdout --yes --dry-run")
+    ENV["SCOUTTRACE_HOME"] = test_home.to_s
+    output = shell_output(
+      "#{bin}/scouttrace init --hosts none --destination stdout --yes --dry-run",
+    )
     assert_match "default_destination", output
   end
 end
