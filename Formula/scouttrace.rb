@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.3.tar.gz"
-  sha256 "c3c91f73441dfffe323af156136bb71867f83ceba960413547361807699724bc"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.4.tar.gz"
+  sha256 "6757c4fb876fa8a9251aec39720e4685e553230f324645d33e28a24f3478f53a"
   license "Apache-2.0"
 
   depends_on "go" => :build
