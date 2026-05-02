@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.6.tar.gz"
-  sha256 "01383b10fbd7dcf3fb809d1d9499fde840c4132c56a129d7f0ecf2d915214272"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.7.tar.gz"
+  sha256 "2dadbb639a5ada37c85bfe5e38eeaa14dd42386e202cf7fa4743c334f0612a07"
   license "Apache-2.0"
 
   depends_on "go" => :build
@@ -64,5 +64,35 @@ class Scouttrace < Formula
       "--scope local --project-dir #{hook_project} --destination default",
     )
     assert_match "claude-hook post-tool-use", (hook_project/".claude/settings.local.json").read
+
+    codex_home = testpath/"codex-home"
+    codex_home.mkpath
+    codex_config = testpath/"codex-config.toml"
+    codex_config.write <<~TOML
+      [mcp_servers.filesystem]
+      command = "npx"
+      args = ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    TOML
+    shell_output("#{bin}/scouttrace --home #{codex_home} hosts patch --host codex --config-path #{codex_config}")
+    assert_match "scouttrace", codex_config.read
+    shell_output("#{bin}/scouttrace --home #{codex_home} hosts unpatch --host codex --config-path #{codex_config}")
+    assert_match "command = \"npx\"", codex_config.read
+
+    hermes_home = testpath/"hermes-home"
+    hermes_home.mkpath
+    hermes_config = testpath/"hermes-config.yaml"
+    hermes_config.write <<~YAML
+      mcp_servers:
+        filesystem:
+          command: npx
+          args:
+            - "-y"
+            - "@modelcontextprotocol/server-filesystem"
+            - "/tmp"
+    YAML
+    shell_output("#{bin}/scouttrace --home #{hermes_home} hosts patch --host hermes --config-path #{hermes_config}")
+    assert_match "scouttrace", hermes_config.read
+    shell_output("#{bin}/scouttrace --home #{hermes_home} hosts unpatch --host hermes --config-path #{hermes_config}")
+    assert_match "command: npx", hermes_config.read
   end
 end
