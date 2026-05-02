@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.5.tar.gz"
-  sha256 "1e99fed17d977879ec34673fe54d036b873e229b7d60df634471f712c78fa6d9"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.6.tar.gz"
+  sha256 "01383b10fbd7dcf3fb809d1d9499fde840c4132c56a129d7f0ecf2d915214272"
   license "Apache-2.0"
 
   depends_on "go" => :build
@@ -45,5 +45,24 @@ class Scouttrace < Formula
     ref_output = shell_output("#{bin}/scouttrace --home #{raw_key_home} config show --json")
     assert_match "encfile://default-api-key", ref_output
     refute_match "whs_homebrew_fake_key", ref_output
+
+    hook_project = testpath/"hook-project"
+    hook_project.mkpath
+    hook_home = testpath/"hook-home"
+    hook_home.mkpath
+    shell_output("#{bin}/scouttrace --home #{hook_home} init --hosts none --destination stdout --yes")
+    hook_payload = <<~JSON
+      {"session_id":"s","hook_event_name":"PostToolUse","tool_name":"mcp__playwright__browser_navigate","tool_input":{"url":"https://example.com"},"tool_response":{"ok":true}}
+    JSON
+    hook_output = pipe_output(
+      "#{bin}/scouttrace --home #{hook_home} --json claude-hook post-tool-use --destination default",
+      hook_payload,
+    )
+    assert_match "default", hook_output
+    shell_output(
+      "#{bin}/scouttrace --home #{hook_home} claude-hook install " \
+      "--scope local --project-dir #{hook_project} --destination default",
+    )
+    assert_match "claude-hook post-tool-use", (hook_project/".claude/settings.local.json").read
   end
 end
