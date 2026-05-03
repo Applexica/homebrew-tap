@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.9.tar.gz"
-  sha256 "eba18250002024680b4af5fed3ee4c8a7f741304072a4d64d56420385ae707d4"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.10.tar.gz"
+  sha256 "f6d63ec759c83f899ce5d8c00b0f5a4433baac89c949eec87418621b8a3bd064"
   license "Apache-2.0"
 
   depends_on "go" => :build
@@ -64,6 +64,7 @@ class Scouttrace < Formula
       "--scope local --project-dir #{hook_project} --destination default",
     )
     assert_match "claude-hook post-tool-use", (hook_project/".claude/settings.local.json").read
+    assert_match "claude-hook stop", (hook_project/".claude/settings.local.json").read
 
     codex_home = testpath/"codex-home"
     codex_home.mkpath
