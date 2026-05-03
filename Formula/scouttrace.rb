@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.11.tar.gz"
-  sha256 "d27bb2efed41baf0bf189117847831655501f1b1c52d9b87ed380e2b4102ee0b"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.12.tar.gz"
+  sha256 "9c8183e3d2623ed8b013667fc38c94d6641795cb0ec96a4f3eb69bf57bf63dd7"
   license "Apache-2.0"
 
   depends_on "go" => :build
@@ -51,14 +51,19 @@ class Scouttrace < Formula
     hook_home = testpath/"hook-home"
     hook_home.mkpath
     shell_output("#{bin}/scouttrace --home #{hook_home} init --hosts none --destination stdout --yes")
+    hook_transcript = testpath/"claude-transcript.jsonl"
+    hook_transcript.write <<~JSONL
+      {"type":"assistant","message":{"model":"claude-opus-4-7","usage":{"input_tokens":1,"cache_creation_input_tokens":999,"output_tokens":10}}}
+    JSONL
     hook_payload = <<~JSON
-      {"session_id":"s","hook_event_name":"PostToolUse","tool_name":"mcp__playwright__browser_navigate","tool_input":{"url":"https://example.com"},"tool_response":{"ok":true}}
+      {"session_id":"s","hook_event_name":"PostToolUse","transcript_path":"#{hook_transcript}","tool_name":"mcp__playwright__browser_navigate","tool_input":{"url":"https://example.com"},"tool_response":{"ok":true}}
     JSON
     hook_output = pipe_output(
       "#{bin}/scouttrace --home #{hook_home} --json claude-hook post-tool-use --destination default",
       hook_payload,
     )
     assert_match "default", hook_output
+    assert_match "llm_turn_count", hook_output
     shell_output(
       "#{bin}/scouttrace --home #{hook_home} claude-hook install " \
       "--scope local --project-dir #{hook_project} --destination default",
