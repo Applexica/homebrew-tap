@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.16.tar.gz"
-  sha256 "0c9119676915cad630f3cd8d98ff87bce64b537bb99ad5e72ec4845f968b7efd"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.17.tar.gz"
+  sha256 "c8695ef6a1550e9927dbc6023c75796aad76c34f2cfe622ab2eb3b03465d878f"
   license "Apache-2.0"
 
   depends_on "go" => :build
@@ -88,6 +88,13 @@ class Scouttrace < Formula
     )
     assert_match "codex-hook stop", codex_hook_snippet
     refute_match "PostToolUse", codex_hook_snippet
+    codex_project = testpath/"codex-project"
+    codex_project.mkpath
+    shell_output(
+      "#{bin}/scouttrace --home #{codex_home} codex-hook install " \
+      "--scope project --project-dir #{codex_project} --destination default",
+    )
+    assert_match "codex-hook stop", (codex_project/".codex/hooks.json").read
 
     hermes_home = testpath/"hermes-home"
     hermes_home.mkpath
