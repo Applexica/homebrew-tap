@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.17.tar.gz"
-  sha256 "c8695ef6a1550e9927dbc6023c75796aad76c34f2cfe622ab2eb3b03465d878f"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.18.tar.gz"
+  sha256 "6a5384708d7898fdbcfbecdf6a6d953ef55e46ebc14be1de6f05afec77074a33"
   license "Apache-2.0"
 
   depends_on "go" => :build
@@ -73,6 +73,7 @@ class Scouttrace < Formula
 
     codex_home = testpath/"codex-home"
     codex_home.mkpath
+    shell_output("#{bin}/scouttrace --home #{codex_home} init --hosts none --destination stdout --yes")
     codex_config = testpath/"codex-config.toml"
     codex_config.write <<~TOML
       [mcp_servers.filesystem]
@@ -95,6 +96,17 @@ class Scouttrace < Formula
       "--scope project --project-dir #{codex_project} --destination default",
     )
     assert_match "codex-hook stop", (codex_project/".codex/hooks.json").read
+    codex_session = testpath/"codex-session.jsonl"
+    codex_session.write <<~JSONL
+      {"timestamp":"2026-05-06T20:26:00.000Z","type":"session_meta","payload":{"id":"session-1","cli_version":"0.128.0-alpha.1","model_provider":"openai"}}
+      {"timestamp":"2026-05-06T20:26:01.000Z","type":"turn_context","payload":{"model":"gpt-5.5"}}
+      {"timestamp":"2026-05-06T20:26:02.000Z","type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000,"output_tokens":50,"total_tokens":1050}}}}
+    JSONL
+    codex_tail = shell_output(
+      "#{bin}/scouttrace --home #{codex_home} --json codex-hook tail " \
+      "--once --flush=false --session-path #{codex_session} --destination default",
+    )
+    assert_match "\"count\":1", codex_tail
 
     hermes_home = testpath/"hermes-home"
     hermes_home.mkpath
