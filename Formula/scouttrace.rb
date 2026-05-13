@@ -1,8 +1,8 @@
 class Scouttrace < Formula
   desc "Local open-source CLI and MCP proxy for LLM tool-call observability"
   homepage "https://github.com/Applexica/ScoutTrace"
-  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.1.18.tar.gz"
-  sha256 "6a5384708d7898fdbcfbecdf6a6d953ef55e46ebc14be1de6f05afec77074a33"
+  url "https://github.com/Applexica/ScoutTrace/archive/refs/tags/v0.6.0.tar.gz"
+  sha256 "1e339085f6c91ae202cbec73730c464b509a138fb18117f59c9955effb816895"
   license "Apache-2.0"
 
   depends_on "go" => :build
@@ -70,6 +70,15 @@ class Scouttrace < Formula
     )
     assert_match "claude-hook post-tool-use", (hook_project/".claude/settings.local.json").read
     assert_match "claude-hook stop", (hook_project/".claude/settings.local.json").read
+    # v0.6.0: install also wires the PreToolUse hook for cost-gate halt
+    # enforcement. When no halt is active the hook is a silent no-op.
+    assert_match "claude-hook pre-tool-use", (hook_project/".claude/settings.local.json").read
+    pre_output = pipe_output(
+      "#{bin}/scouttrace --home #{hook_home} claude-hook pre-tool-use --destination default",
+      "{}",
+    )
+    # No halt configured ⇒ silent stdout, exit 0.
+    assert_equal "", pre_output.strip
 
     codex_home = testpath/"codex-home"
     codex_home.mkpath
